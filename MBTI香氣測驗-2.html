@@ -1,0 +1,632 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI 香氣配方分析器</title>
+    <style>
+        :root {
+            /* 莫蘭迪色調：柔和、高級配色 */
+            --morandi-primary: #B0A8B9; /* 淡紫灰 */
+            --morandi-secondary: #8A9A5B; /* 橄欖綠 */
+            --morandi-accent: #D4C4B0; /* 暖灰 beige */
+            --morandi-bg-light: #F5F1EA; /* 奶白 */
+            --morandi-surface: #EDE4D4; /* 米白 */
+            --morandi-text-primary: #5C5B6B; /* 深灰紫 */
+            --morandi-text-secondary: #7A7A8C; /* 淡灰 */
+            --morandi-border: #D8D0C0; /* 淺灰棕 */
+            --morandi-shadow: rgba(92, 91, 107, 0.15); /* 柔和陰影 */
+            --morandi-gradient: linear-gradient(135deg, #B0A8B9, #8A9A5B); /* 漸層 */
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--morandi-bg-light);
+            color: var(--morandi-text-primary);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+        h1 {
+            background: var(--morandi-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            text-align: center;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--morandi-surface);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px var(--morandi-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--morandi-gradient);
+        }
+        .progress-bar {
+            background-color: var(--morandi-border);
+            border-radius: 12px;
+            margin-bottom: 25px;
+            height: 10px;
+            overflow: hidden;
+        }
+        .progress {
+            background: var(--morandi-gradient);
+            height: 100%;
+            border-radius: 12px;
+            width: 0%;
+            transition: width 0.4s ease-in-out;
+        }
+        .dimension {
+            display: none;
+            margin-bottom: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dimension.active {
+            display: block;
+        }
+        .question {
+            margin-bottom: 25px;
+            background: #F9F5EB;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px var(--morandi-shadow);
+            border-left: 5px solid var(--morandi-accent);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .question:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px var(--morandi-shadow);
+        }
+        label {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+            cursor: pointer;
+            padding: 10px;
+            transition: background-color 0.2s ease;
+            border-radius: 10px;
+        }
+        label:hover {
+            background-color: #F1ECE3;
+        }
+        input[type="radio"] {
+            margin-right: 12px;
+            accent-color: var(--morandi-primary);
+            transform: scale(1.2);
+        }
+        button {
+            display: block;
+            margin: 25px auto;
+            padding: 15px 35px;
+            background: var(--morandi-gradient);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(92, 91, 107, 0.3);
+            min-width: 180px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(92, 91, 107, 0.4);
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button:disabled {
+            background: var(--morandi-border);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        #result {
+            margin-top: 30px;
+            padding: 35px;
+            background: linear-gradient(135deg, #F1ECE3, #EDE4D4);
+            border-radius: 20px;
+            display: none;
+            box-shadow: 0 8px 32px var(--morandi-shadow);
+            animation: slideUp 0.6s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .recipe {
+            background-color: var(--morandi-surface);
+            padding: 25px;
+            border: 1px solid var(--morandi-border);
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px var(--morandi-shadow);
+        }
+        .recipe strong {
+            color: var(--morandi-primary);
+            font-size: 1.2em;
+        }
+        .scent-image {
+            max-width: 100%;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px var(--morandi-shadow);
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .scent-info {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+            background: #F9F5EB;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        .scent-info img {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            margin-right: 15px;
+        }
+        .share-prompt {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.9em;
+            color: var(--morandi-text-secondary);
+        }
+        .share-prompt button {
+            margin-top: 10px;
+            background: #A8B5A2; /* 柔和綠灰 */
+            box-shadow: 0 4px 12px rgba(138, 154, 91, 0.3);
+        }
+        .share-prompt button:hover {
+            box-shadow: 0 6px 20px rgba(138, 154, 91, 0.4);
+        }
+        .toast {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--morandi-primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px var(--morandi-shadow);
+            z-index: 1000;
+            animation: fadeInOut 3s ease;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+        }
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            font-size: 0.9em;
+            color: var(--morandi-text-secondary);
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+                margin: 15px;
+            }
+            .question {
+                padding: 15px;
+            }
+            button {
+                padding: 12px 25px;
+                font-size: 14px;
+            }
+            .scent-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            .scent-info img {
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MBTI 香氣配方分析器</h1>
+        <p style="text-align: center; color: var(--morandi-text-secondary);">探索您的個性，找到與自然共鳴的精油配方！每次測試隨機生成題目，感受植物與心靈的連結。</p>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <form id="mbtiForm">
+            <!-- 維度將動態生成 -->
+        </form>
+        
+        <div id="result">
+            <h2>您的 MBTI 類型： <span id="mbtiType"></span></h2>
+            <p id="groupDescription"></p>
+            <p id="typeDescription"></p>
+            <div id="scentRecommendation"></div>
+            <div class="share-prompt">
+                喜歡您的專屬香氣？儲存結果或與朋友分享！
+                <button onclick="window.location.reload()">重新測試</button>
+            </div>
+        </div>
+        
+        <div class="toast" id="toast">請完成所有問題再繼續！</div>
+    </div>
+    
+    <footer>
+        © 2025 MBTI 香氣分析器。結合 MBTI 與自然精油，打造個人化身心體驗。
+    </footer>
+    
+    <script>
+        const form = document.getElementById('mbtiForm');
+        const resultDiv = document.getElementById('result');
+        const mbtiTypeSpan = document.getElementById('mbtiType');
+        const groupDescription = document.getElementById('groupDescription');
+        const typeDescription = document.getElementById('typeDescription');
+        const scentRecommendation = document.getElementById('scentRecommendation');
+        const progress = document.getElementById('progress');
+        const toast = document.getElementById('toast');
+        
+        // 題目池，參考 16type.com/maintemp.html，擴充至每維度 10 題，改為簡短敘述
+        const questionsPool = {
+            dim1: [ // E vs I
+                { q: '享受與人交談的時光', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '喜歡獨處的寧靜', a: 'A', b: 'B', valA: 'I', valB: 'E' },
+                { q: '主動參加社交活動', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '偏好安靜的個人空間', a: 'A', b: 'B', valA: 'I', valB: 'E' },
+                { q: '熱衷於與朋友聚會', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '需要獨處來恢復能量', a: 'A', b: 'B', valA: 'I', valB: 'E' },
+                { q: '輕鬆與陌生人聊天', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '享受小圈子的陪伴', a: 'A', b: 'B', valA: 'I', valB: 'E' },
+                { q: '喜歡成為人群焦點', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '偏好獨自閱讀書籍', a: 'A', b: 'B', valA: 'I', valB: 'E' }
+            ],
+            dim2: [ // S vs N
+                { q: '專注於細節的現實', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '想像未來的可能性', a: 'A', b: 'B', valA: 'N', valB: 'S' },
+                { q: '喜歡實用的解決方案', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '探索抽象的概念', a: 'A', b: 'B', valA: 'N', valB: 'S' },
+                { q: '依賴經驗的指導', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '被新想法所吸引', a: 'A', b: 'B', valA: 'N', valB: 'S' },
+                { q: '注重事實的證據', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '思考事物的深層意義', a: 'A', b: 'B', valA: 'N', valB: 'S' },
+                { q: '偏好步驟清晰的計劃', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '追求創新的靈感', a: 'A', b: 'B', valA: 'N', valB: 'S' }
+            ],
+            dim3: [ // T vs F
+                { q: '重視邏輯的分析', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '考慮他人的情感', a: 'A', b: 'B', valA: 'F', valB: 'T' },
+                { q: '優先效率的結果', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '關注人際的和諧', a: 'A', b: 'B', valA: 'F', valB: 'T' },
+                { q: '依賴事實的判斷', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '重視價值觀的指引', a: 'A', b: 'B', valA: 'F', valB: 'T' },
+                { q: '直接表達批評', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '注重情感的回饋', a: 'A', b: 'B', valA: 'F', valB: 'T' },
+                { q: '專注目標的實現', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '體諒他人的立場', a: 'A', b: 'B', valA: 'F', valB: 'T' }
+            ],
+            dim4: [ // J vs P
+                { q: '喜歡有條理的環境', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '享受即興的變化', a: 'A', b: 'B', valA: 'P', valB: 'J' },
+                { q: '偏好計畫的安排', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '適應隨機的機會', a: 'A', b: 'B', valA: 'P', valB: 'J' },
+                { q: '堅持固定的時間表', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '接受突發的改變', a: 'A', b: 'B', valA: 'P', valB: 'J' },
+                { q: '喜歡有序的日常', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '追求靈活的自由', a: 'A', b: 'B', valA: 'P', valB: 'J' },
+                { q: '討厭混亂的局面', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '歡迎即興的冒險', a: 'A', b: 'B', valA: 'P', valB: 'J' }
+            ]
+        };
+        
+        // MBTI 群組與香氣配方映射
+        const groups = {
+            'Analyst': {
+                types: ['INTJ', 'INTP', 'ENTJ', 'ENTP'],
+                desc: '分析型：邏輯與創新，如森林中的清風，喜愛清晰思考與解決問題。適合清新提神的香調。',
+                tunes: [
+                    { name: '柑橘調', desc: '清新活力，提振邏輯思維。', recipes: ['前調 - 檸檬 + 葡萄柚（3滴總）；中調 - 甜橙（2滴）；後調 - 佛手柑（1滴）。'] },
+                    { name: '芳香調', desc: '清新療癒，提升創新專注。', recipes: ['前調 - 薄荷（3滴）；中調 - 薰衣草 + 迷迭香（2滴總）；後調 - 快樂鼠尾草（1滴）。'] }
+                ]
+            },
+            'Diplomat': {
+                types: ['INFJ', 'INFP', 'ENFJ', 'ENFP'],
+                desc: '外交型：情感與創意，如花園中的溫暖微風，注重人際連結與內在價值。適合柔和浪漫的香調。',
+                tunes: [
+                    { name: '花香調', desc: '優雅浪漫，平衡情感洞察。', recipes: ['前調 - 橙花（3滴）；中調 - 玫瑰 + 茉莉（2滴總）；後調 - 天竺葵（1滴）。'] },
+                    { name: '果香調', desc: '甜美活潑，療癒內在情感。', recipes: ['前調 - 甜橙（3滴）；中調 - 葡萄柚 + 萊姆（2滴總）；後調 - 杜松漿果（1滴）。'] }
+                ]
+            },
+            'Sentinel': {
+                types: ['ISTJ', 'ISFJ', 'ESTJ', 'ESFJ'],
+                desc: '守衛型：穩定與責任，如參天古木的沉穩氣息，重視秩序與和諧。適合沉靜溫暖的香調。',
+                tunes: [
+                    { name: '木質調', desc: '沉穩安定，強化責任感。', recipes: ['前調 - 杜松（3滴）；中調 - 雪松 + 松（2滴總）；後調 - 檀香（1滴）。'] },
+                    { name: '東方調', desc: '溫暖神秘，帶來內斂慰藉。', recipes: ['前調 - 肉桂（3滴）；中調 - 丁香 + 乳香（2滴總）；後調 - 檀香（1滴）。'] }
+                ]
+            },
+            'Explorer': {
+                types: ['ISTP', 'ISFP', 'ESTP', 'ESFP'],
+                desc: '探索型：冒險與感官，如清晨草原的自由氣息，追求自由與刺激。適合清爽活力的香調。',
+                tunes: [
+                    { name: '青草調', desc: '清爽自然，提振冒險精神。', recipes: ['前調 - 薄荷（3滴）；中調 - 快樂鼠尾草 + 迷迭香（2滴總）；後調 - 松（1滴）。'] },
+                    { name: '水生調', desc: '純淨清涼，增強感官體驗。', recipes: ['前調 - 薄荷（3滴）；中調 - 檸檬 + 佛手柑（2滴總）；後調 - 鼠尾草（1滴）。'] }
+                ]
+            }
+        };
+        
+        // 圖片映射（使用有效 URL）
+        const imageMap = {
+            '柑橘調': 'https://i.etsystatic.com/40137072/r/il/38b0c4/5751446747/il_fullxfull.5751446747_9qs1.jpg',
+            '芳香調': 'https://i.etsystatic.com/8470287/r/il/e01c47/4520737075/il_fullxfull.4520737075_9tek.jpg',
+            '花香調': 'https://cdn.shopify.com/s/files/1/0250/8482/1600/files/image-from-rawpixel-id-6282949-jpeg.jpg?v=1713177533',
+            '果香調': 'https://i.etsystatic.com/6991060/r/il/f07010/1381519769/il_fullxfull.1381519769_kfei.jpg',
+            '木質調': 'https://www.shutterstock.com/image-vector/coniferous-plants-branches-vector-set-600w-2390456469.jpg',
+            '東方調': 'https://static.vecteezy.com/system/resources/previews/032/178/579/non_2x/watercolor-set-of-cinnamon-sticks-star-anise-cloves-botanical-illustration-of-spices-vector.jpg',
+            '青草調': 'https://m.media-amazon.com/images/I/81k8aq9lWbL.jpg',
+            '水生調': 'https://www.shutterstock.com/image-illustration/bergamot-watercolor-illustration-citrus-branch-600nw-2048091815.jpg'
+        };
+        
+        // 圖標映射
+        const iconMap = {
+            '柑橘調': 'https://cdn-icons-png.flaticon.com/512/2909/2909760.png',
+            '芳香調': 'https://cdn-icons-png.flaticon.com/512/3076/3076079.png',
+            '花香調': 'https://cdn-icons-png.flaticon.com/512/2921/2921857.png',
+            '果香調': 'https://cdn-icons-png.flaticon.com/512/3081/3081888.png',
+            '木質調': 'https://cdn-icons-png.flaticon.com/512/2997/2997933.png',
+            '東方調': 'https://cdn-icons-png.flaticon.com/512/3076/3076079.png',
+            '青草調': 'https://cdn-icons-png.flaticon.com/512/2921/2921857.png',
+            '水生調': 'https://cdn-icons-png.flaticon.com/512/2919/2919592.png'
+        };
+        
+        // 隨機選題並生成表單
+        function generateForm() {
+            try {
+                const dims = ['dim1', 'dim2', 'dim3', 'dim4'];
+                let qIndex = 1;
+                
+                dims.forEach((dim, index) => {
+                    const pool = questionsPool[dim].slice();
+                    const selected = [];
+                    for (let i = 0; i < 3; i++) {
+                        const rand = Math.floor(Math.random() * pool.length);
+                        selected.push(pool.splice(rand, 1)[0]);
+                    }
+                    
+                    const div = document.createElement('div');
+                    div.className = 'dimension';
+                    div.id = dim;
+                    if (index === 0) div.classList.add('active');
+                    
+                    selected.forEach(q => {
+                        const qDiv = document.createElement('div');
+                        qDiv.className = 'question';
+                        
+                        const p = document.createElement('p');
+                        p.textContent = q.q;
+                        qDiv.appendChild(p);
+                        
+                        const labelA = document.createElement('label');
+                        const inputA = document.createElement('input');
+                        inputA.type = 'radio';
+                        inputA.name = `q${qIndex}`;
+                        inputA.value = q.valA;
+                        labelA.appendChild(inputA);
+                        labelA.appendChild(document.createTextNode(`A. 更像我`));
+                        qDiv.appendChild(labelA);
+                        
+                        const labelB = document.createElement('label');
+                        const inputB = document.createElement('input');
+                        inputB.type = 'radio';
+                        inputB.name = `q${qIndex}`;
+                        inputB.value = q.valB;
+                        labelB.appendChild(inputB);
+                        labelB.appendChild(document.createTextNode(`B. 不像我`));
+                        qDiv.appendChild(labelB);
+                        
+                        div.appendChild(qDiv);
+                        qIndex++;
+                    });
+                    
+                    form.appendChild(div);
+                });
+                
+                const nextBtn = document.createElement('button');
+                nextBtn.textContent = '下一頁';
+                nextBtn.id = 'nextBtn';
+                form.appendChild(nextBtn);
+                
+                nextBtn.addEventListener('click', handleNext);
+            } catch (error) {
+                console.error('Error generating form:', error);
+                toast.textContent = '表單生成失敗，請重試！';
+                toast.style.display = 'block';
+                setTimeout(() => toast.style.display = 'none', 3000);
+            }
+        }
+        
+        let currentDim = 0;
+        const totalDims = 4;
+        
+        function updateProgress() {
+            try {
+                progress.style.width = `${(currentDim / totalDims) * 100}%`;
+            } catch (error) {
+                console.error('Error updating progress:', error);
+            }
+        }
+        
+        function handleNext(e) {
+            e.preventDefault();
+            try {
+                const dims = document.querySelectorAll('.dimension');
+                const current = dims[currentDim];
+                
+                const radios = current.querySelectorAll('input[type="radio"]:checked');
+                if (radios.length < 3) {
+                    toast.style.display = 'block';
+                    setTimeout(() => toast.style.display = 'none', 3000);
+                    return;
+                }
+                
+                if (currentDim < totalDims - 1) {
+                    current.classList.remove('active');
+                    currentDim++;
+                    dims[currentDim].classList.add('active');
+                    updateProgress();
+                    if (currentDim === totalDims - 1) {
+                        document.getElementById('nextBtn').textContent = '提交並探索香氣';
+                    }
+                } else {
+                    calculateResult();
+                }
+            } catch (error) {
+                console.error('Error handling next:', error);
+                toast.textContent = '操作失敗，請重試！';
+                toast.style.display = 'block';
+                setTimeout(() => toast.style.display = 'none', 3000);
+            }
+        }
+        
+        function calculateResult() {
+            try {
+                let ei = 0, sn = 0, tf = 0, jp = 0;
+                
+                for (let i = 1; i <= 12; i++) {
+                    const val = document.querySelector(`input[name="q${i}"]:checked`)?.value;
+                    if (val) {
+                        if (i <= 3) {
+                            if (val === 'E') ei++; else ei--;
+                        } else if (i <= 6) {
+                            if (val === 'S') sn++; else sn--;
+                        } else if (i <= 9) {
+                            if (val === 'T') tf++; else tf--;
+                        } else {
+                            if (val === 'J') jp++; else jp--;
+                        }
+                    }
+                }
+                
+                const type1 = (ei >= 0) ? 'E' : 'I';
+                const type2 = (sn >= 0) ? 'S' : 'N';
+                const type3 = (tf >= 0) ? 'T' : 'F';
+                const type4 = (jp >= 0) ? 'J' : 'P';
+                const mbti = type1 + type2 + type3 + type4;
+                
+                let group = '';
+                for (const g in groups) {
+                    if (groups[g].types.includes(mbti)) {
+                        group = g;
+                        break;
+                    }
+                }
+                
+                mbtiTypeSpan.textContent = mbti;
+                groupDescription.textContent = group ? groups[group].desc : '您的類型屬於特殊組合，適合平衡情緒的通用香調。';
+                
+                const groupData = groups[group] || {
+                    tunes: [{ name: '通用調', desc: '平衡情緒，適合多數場合。', recipes: ['前調 - 甜橙（3滴）；中調 - 薰衣草（2滴）；後調 - 雪松（1滴）。'] }]
+                };
+                const selectedTune = groupData.tunes[Math.floor(Math.random() * groupData.tunes.length)];
+                const selectedRecipe = selectedTune.recipes[Math.floor(Math.random() * selectedTune.recipes.length)];
+                
+                typeDescription.textContent = `您的類型適合 ${selectedTune.name}，${selectedTune.desc}`;
+                scentRecommendation.innerHTML = `
+                    <img src="${imageMap[selectedTune.name] || imageMap['通用調'] || ''}" alt="${selectedTune.name} 精油植物水彩圖" class="scent-image">
+                    <div class="scent-info">
+                        <img src="${iconMap[selectedTune.name] || iconMap['通用調'] || ''}" alt="${selectedTune.name} 圖標">
+                        <div>
+                            <strong>${selectedTune.name}</strong><br>
+                            ${selectedTune.desc}
+                        </div>
+                    </div>
+                    <div class="recipe"><strong>推薦配方：</strong> ${selectedRecipe} (比例 3:2:1，可依喜好調整)</div>
+                `;
+                
+                form.style.display = 'none';
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Error calculating result:', error);
+                toast.textContent = '結果計算失敗，請重試！';
+                toast.style.display = 'block';
+                setTimeout(() => toast.style.display = 'none', 3000);
+            }
+        }
+        
+        // 初始化
+        try {
+            generateForm();
+            updateProgress();
+        } catch (error) {
+            console.error('Initialization error:', error);
+            toast.textContent = '初始化失敗，請重新載入頁面！';
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+    </script>
+</body>
+</html>
