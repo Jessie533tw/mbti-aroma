@@ -331,55 +331,55 @@
         const progress = document.getElementById('progress');
         const toast = document.getElementById('toast');
         
-        // 題目池，參考 16type.com/maintemp.html，擴充至每維度 10 題，改為簡短敘述
+        // 題目池，擴充至每維度 10 題，改為情境式敘述
         const questionsPool = {
             dim1: [ // E vs I
-                { q: '享受與人交談的時光', a: 'A', b: 'B', valA: 'E', valB: 'I' },
-                { q: '喜歡獨處的寧靜', a: 'A', b: 'B', valA: 'I', valB: 'E' },
-                { q: '主動參加社交活動', a: 'A', b: 'B', valA: 'E', valB: 'I' },
-                { q: '偏好安靜的個人空間', a: 'A', b: 'B', valA: 'I', valB: 'E' },
-                { q: '熱衷於與朋友聚會', a: 'A', b: 'B', valA: 'E', valB: 'I' },
-                { q: '需要獨處來恢復能量', a: 'A', b: 'B', valA: 'I', valB: 'E' },
-                { q: '輕鬆與陌生人聊天', a: 'A', b: 'B', valA: 'E', valB: 'I' },
-                { q: '享受小圈子的陪伴', a: 'A', b: 'B', valA: 'I', valB: 'E' },
-                { q: '喜歡成為人群焦點', a: 'A', b: 'B', valA: 'E', valB: 'I' },
-                { q: '偏好獨自閱讀書籍', a: 'A', b: 'B', valA: 'I', valB: 'E' }
+                { q: '你周末參加了一場派對，結束後朋友邀請你繼續去咖啡廳聊天，你會...', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '同事建議團隊一起吃午餐，你的反應是...', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '你看到一個新活動海報，邀請大家報名參加，你會...', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '朋友邀請你一起參加戶外活動，你會...', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '下班後，同事問你是否想一起喝杯咖啡，你會...', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '你在家休息時，家人建議一起看電影，你會...', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '朋友組織了一個線上遊戲夜，你會...', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '你在公園散步時，陌生人主動聊天，你會...', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '周末有個社區聚會，你會...', a: 'A', b: 'B', valA: 'E', valB: 'I' },
+                { q: '朋友想跟你討論最近的話題，你會...', a: 'A', b: 'B', valA: 'E', valB: 'I' }
             ],
             dim2: [ // S vs N
-                { q: '專注於細節的現實', a: 'A', b: 'B', valA: 'S', valB: 'N' },
-                { q: '想像未來的可能性', a: 'A', b: 'B', valA: 'N', valB: 'S' },
-                { q: '喜歡實用的解決方案', a: 'A', b: 'B', valA: 'S', valB: 'N' },
-                { q: '探索抽象的概念', a: 'A', b: 'B', valA: 'N', valB: 'S' },
-                { q: '依賴經驗的指導', a: 'A', b: 'B', valA: 'S', valB: 'N' },
-                { q: '被新想法所吸引', a: 'A', b: 'B', valA: 'N', valB: 'S' },
-                { q: '注重事實的證據', a: 'A', b: 'B', valA: 'S', valB: 'N' },
-                { q: '思考事物的深層意義', a: 'A', b: 'B', valA: 'N', valB: 'S' },
-                { q: '偏好步驟清晰的計劃', a: 'A', b: 'B', valA: 'S', valB: 'N' },
-                { q: '追求創新的靈感', a: 'A', b: 'B', valA: 'N', valB: 'S' }
+                { q: '你在計畫下次的旅行時，你會...', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '朋友問你對新工作的看法，你會...', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '你收到一封神秘的邀請函，你會...', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '你在挑選新衣服時，你會...', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '朋友問你對新電影的感想，你會...', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '你在設計房間佈置時，你會...', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '朋友請你幫忙解決問題，你會...', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '你在閱讀一本書時，你會...', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '你收到一個新任務時，你會...', a: 'A', b: 'B', valA: 'S', valB: 'N' },
+                { q: '朋友分享一個夢想計畫，你會...', a: 'A', b: 'B', valA: 'S', valB: 'N' }
             ],
             dim3: [ // T vs F
-                { q: '重視邏輯的分析', a: 'A', b: 'B', valA: 'T', valB: 'F' },
-                { q: '考慮他人的情感', a: 'A', b: 'B', valA: 'F', valB: 'T' },
-                { q: '優先效率的結果', a: 'A', b: 'B', valA: 'T', valB: 'F' },
-                { q: '關注人際的和諧', a: 'A', b: 'B', valA: 'F', valB: 'T' },
-                { q: '依賴事實的判斷', a: 'A', b: 'B', valA: 'T', valB: 'F' },
-                { q: '重視價值觀的指引', a: 'A', b: 'B', valA: 'F', valB: 'T' },
-                { q: '直接表達批評', a: 'A', b: 'B', valA: 'T', valB: 'F' },
-                { q: '注重情感的回饋', a: 'A', b: 'B', valA: 'F', valB: 'T' },
-                { q: '專注目標的實現', a: 'A', b: 'B', valA: 'T', valB: 'F' },
-                { q: '體諒他人的立場', a: 'A', b: 'B', valA: 'F', valB: 'T' }
+                { q: '你的朋友告訴你他剛被解僱了，你會怎麼回應？', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '同事忘了完成一項重要任務，導致專案延誤，你會怎麼回應？', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '朋友跟你說他和伴侶吵架了，你的反應是什麼？', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '朋友告訴你他最近過得很糟糕時，你會說什麼？', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '當你意外收到禮物時，你會怎麼回應？', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '朋友告訴你他對未來感到迷茫時，你會怎麼建議他？', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '你朋友因為考試沒考好感到失落，你會怎麼回應？', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '朋友告訴你，他心情不好想要去海邊走走，你會怎麼回應？', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '你聽說某個同事對你有意見，你會怎麼處理？', a: 'A', b: 'B', valA: 'T', valB: 'F' },
+                { q: '朋友問你對他的新想法有什麼看法，你會說什麼？', a: 'A', b: 'B', valA: 'T', valB: 'F' }
             ],
             dim4: [ // J vs P
-                { q: '喜歡有條理的環境', a: 'A', b: 'B', valA: 'J', valB: 'P' },
-                { q: '享受即興的變化', a: 'A', b: 'B', valA: 'P', valB: 'J' },
-                { q: '偏好計畫的安排', a: 'A', b: 'B', valA: 'J', valB: 'P' },
-                { q: '適應隨機的機會', a: 'A', b: 'B', valA: 'P', valB: 'J' },
-                { q: '堅持固定的時間表', a: 'A', b: 'B', valA: 'J', valB: 'P' },
-                { q: '接受突發的改變', a: 'A', b: 'B', valA: 'P', valB: 'J' },
-                { q: '喜歡有序的日常', a: 'A', b: 'B', valA: 'J', valB: 'P' },
-                { q: '追求靈活的自由', a: 'A', b: 'B', valA: 'P', valB: 'J' },
-                { q: '討厭混亂的局面', a: 'A', b: 'B', valA: 'J', valB: 'P' },
-                { q: '歡迎即興的冒險', a: 'A', b: 'B', valA: 'P', valB: 'J' }
+                { q: '你計畫周末的行程，你會...', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '朋友臨時邀請你去看電影，你會...', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '你整理房間時發現東西很亂，你會...', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '你準備開始一個新項目時，你會...', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '朋友提議周末去旅行，你會...', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '你收到一個截止日期的任務，你會...', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '你周末有空閒時間，你會...', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '朋友邀請你參加即興派對，你會...', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '你計畫購買新東西時，你會...', a: 'A', b: 'B', valA: 'J', valB: 'P' },
+                { q: '你面對一個突發狀況時，你會...', a: 'A', b: 'B', valA: 'J', valB: 'P' }
             ]
         };
         
@@ -419,7 +419,7 @@
             }
         };
         
-        // 圖片映射（使用有效 URL）
+        // 圖片映射
         const imageMap = {
             '柑橘調': 'https://i.etsystatic.com/40137072/r/il/38b0c4/5751446747/il_fullxfull.5751446747_9qs1.jpg',
             '芳香調': 'https://i.etsystatic.com/8470287/r/il/e01c47/4520737075/il_fullxfull.4520737075_9tek.jpg',
@@ -441,6 +441,26 @@
             '東方調': 'https://cdn-icons-png.flaticon.com/512/3076/3076079.png',
             '青草調': 'https://cdn-icons-png.flaticon.com/512/2921/2921857.png',
             '水生調': 'https://cdn-icons-png.flaticon.com/512/2919/2919592.png'
+        };
+        
+        // 選項內容映射
+        const optionsMap = {
+            'dim1': {
+                'A': '興奮地加入，繼續跟大家聊下去。',
+                'B': '覺得有點累，寧願回家休息。'
+            },
+            'dim2': {
+                'A': '專注查詢交通和住宿的實用資訊。',
+                'B': '想像沿途的風景和可能的冒險故事。'
+            },
+            'dim3': {
+                'A': '太突然了吧！你接下來怎麼做？有新的求職計劃了嗎？',
+                'B': '天啊！怎麼會這樣？你還好嗎？一定很難過吧？'
+            },
+            'dim4': {
+                'A': '提前列出詳細的時間表。',
+                'B': '隨心情決定，保持靈活安排。'
+            }
         };
         
         // 隨機選題並生成表單
@@ -476,7 +496,7 @@
                         inputA.name = `q${qIndex}`;
                         inputA.value = q.valA;
                         labelA.appendChild(inputA);
-                        labelA.appendChild(document.createTextNode(`A. 更像我`));
+                        labelA.appendChild(document.createTextNode(`A. ${optionsMap[dim]['A']}`));
                         qDiv.appendChild(labelA);
                         
                         const labelB = document.createElement('label');
@@ -485,7 +505,7 @@
                         inputB.name = `q${qIndex}`;
                         inputB.value = q.valB;
                         labelB.appendChild(inputB);
-                        labelB.appendChild(document.createTextNode(`B. 不像我`));
+                        labelB.appendChild(document.createTextNode(`B. ${optionsMap[dim]['B']}`));
                         qDiv.appendChild(labelB);
                         
                         div.appendChild(qDiv);
